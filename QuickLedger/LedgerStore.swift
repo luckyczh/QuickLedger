@@ -70,6 +70,10 @@ final class LedgerStore: ObservableObject {
         return categories.first(where: { $0.id == id })?.name ?? "未分类"
     }
 
+    func reloadData() {
+        loadData()
+    }
+
     private func loadData() {
         decoder.dateDecodingStrategy = .iso8601
         encoder.dateEncodingStrategy = .iso8601
@@ -111,7 +115,17 @@ final class LedgerStore: ObservableObject {
     }
 
     private func fileURL(fileName: String) -> URL {
-        let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        return documentDirectory.appendingPathComponent(fileName)
+        let fileManager = FileManager.default
+        let containerURL: URL
+
+        // 优先使用 App Group 共享容器
+        if let groupURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: "group.com.quickledger.app") {
+            containerURL = groupURL
+        } else {
+            // 回退到文档目录
+            containerURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        }
+
+        return containerURL.appendingPathComponent(fileName)
     }
 }

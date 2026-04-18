@@ -12,24 +12,25 @@ struct ContentView: View {
         TabView {
             QuickEntryView()
                 .tabItem {
-                    Label("记一笔", systemImage: "plus.circle")
+                    Label("记一笔", systemImage: "plus.circle.fill")
                 }
 
             TransactionsView()
                 .tabItem {
-                    Label("明细", systemImage: "list.bullet")
+                    Label("明细", systemImage: "list.bullet.rectangle.fill")
                 }
 
             StatsView()
                 .tabItem {
-                    Label("统计", systemImage: "chart.bar")
+                    Label("统计", systemImage: "chart.bar.fill")
                 }
 
             SettingsView()
                 .tabItem {
-                    Label("设置", systemImage: "gear")
+                    Label("设置", systemImage: "gearshape.fill")
                 }
         }
+        .tint(.cyan)
     }
 }
 
@@ -41,7 +42,6 @@ private struct QuickEntryView: View {
     @State private var selectedType: RecordType = .expense
     @State private var selectedCategoryID: UUID?
     @State private var selectedDate: Date = .now
-    @State private var showMore = false
     @State private var source = "manual"
     @State private var showSavedBanner = false
 
@@ -52,10 +52,16 @@ private struct QuickEntryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("快速录入")
-                            .font(.headline)
+                VStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: "bolt.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.cyan)
+                            Text("快速录入")
+                                .font(.title3.bold())
+                            Spacer()
+                        }
 
                         Picker("类型", selection: $selectedType) {
                             ForEach(RecordType.allCases, id: \.rawValue) { type in
@@ -67,72 +73,120 @@ private struct QuickEntryView: View {
                             updateDefaultCategoryIfNeeded()
                         }
 
-                        TextField("金额", text: $amountText)
-                            .keyboardType(.decimalPad)
-                            .textFieldStyle(.roundedBorder)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
+                        VStack(spacing: 12) {
                             HStack {
-                                ForEach(currentCategories, id: \.id) { category in
-                                    categoryChip(category)
+                                Image(systemName: "yensign.circle.fill")
+                                    .foregroundStyle(.green)
+                                TextField("金额", text: $amountText)
+                                    .keyboardType(.decimalPad)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+
+                            HStack {
+                                Image(systemName: "note.text")
+                                    .foregroundStyle(.orange)
+                                TextField("备注（可选）", text: $noteText)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+
+                            HStack {
+                                Image(systemName: "calendar")
+                                    .foregroundStyle(.purple)
+                                DatePicker("日期", selection: $selectedDate, displayedComponents: .date)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "tag.fill")
+                                    .foregroundStyle(.pink)
+                                Text("分类")
+                                    .font(.subheadline.bold())
+                            }
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 10) {
+                                    ForEach(currentCategories, id: \.id) { category in
+                                        categoryChip(category)
+                                    }
                                 }
                             }
-                            .padding(.vertical, 4)
                         }
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                    .padding(20)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(.systemBackground), Color(.systemGray6).opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .cornerRadius(20)
+                    .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
 
-                    Button(showMore ? "收起更多" : "更多选项") {
-                        showMore.toggle()
-                    }
-                    .buttonStyle(.bordered)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if showMore {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("补充信息")
-                                .font(.headline)
-                            DatePicker("日期", selection: $selectedDate, displayedComponents: .date)
-                            TextField("备注", text: $noteText, axis: .vertical)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
-                    }
-
-                    Button("保存") {
+                    Button {
                         saveRecord()
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("保存")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(
+                            LinearGradient(
+                                colors: [.cyan, .blue],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .foregroundStyle(.white)
+                        .cornerRadius(16)
+                        .shadow(color: .cyan.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
             .navigationTitle("记一笔")
             .navigationBarTitleDisplayMode(.inline)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(.systemBackground))
+            .background(Color(.systemGroupedBackground))
             .overlay(alignment: .top) {
                 if showSavedBanner {
-                    Text("已保存")
-                        .font(.caption)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.green.opacity(0.9), in: Capsule())
-                        .foregroundStyle(.white)
-                        .padding(.top, 12)
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("已保存")
+                    }
+                    .font(.subheadline.bold())
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(
+                        Capsule()
+                            .fill(.green)
+                            .shadow(color: .green.opacity(0.3), radius: 8, x: 0, y: 4)
+                    )
+                    .foregroundStyle(.white)
+                    .padding(.top, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
             .safeAreaInset(edge: .bottom) {
                 if source == "shortcut" {
-                    Text("来自快捷指令")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.bottom, 4)
+                    HStack {
+                        Image(systemName: "bolt.fill")
+                        Text("来自快捷指令")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.cyan)
+                    .padding(.bottom, 4)
                 }
             }
             .onAppear {
@@ -173,7 +227,11 @@ private struct QuickEntryView: View {
         selectedType = draft.type
         selectedDate = draft.date
         source = draft.source
-        showMore = !draft.note.isEmpty
+
+        // 自动提交
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            saveRecord()
+        }
     }
 
     private func saveRecord() {
@@ -220,17 +278,26 @@ private struct TransactionsView: View {
                 ForEach(store.records, id: \.id) { record in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(store.categoryName(for: record.categoryId))
+                            if !record.note.isEmpty {
+                                Text(record.note)
+                                    .font(.body)
+                            } else {
+                                Text(store.categoryName(for: record.categoryId))
+                                    .foregroundStyle(.secondary)
+                            }
                             Spacer()
                             let symbol = record.type == .expense ? "-" : "+"
                             Text("\(symbol)\(record.amount.formattedCurrency)")
                                 .foregroundStyle(record.type == .expense ? .red : .green)
                         }
-                        Text(record.occurredAt.formatted(date: .abbreviated, time: .omitted))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if !record.note.isEmpty {
-                            Text(record.note)
+                        HStack {
+                            Text(store.categoryName(for: record.categoryId))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text("·")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(record.occurredAt.formatted(date: .abbreviated, time: .shortened))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -242,6 +309,12 @@ private struct TransactionsView: View {
                 }
             }
             .navigationTitle("明细")
+            .onAppear {
+                store.reloadData()
+            }
+            .refreshable {
+                store.reloadData()
+            }
         }
     }
 }
@@ -307,6 +380,12 @@ private struct StatsView: View {
                 }
             }
             .navigationTitle("统计")
+            .onAppear {
+                store.reloadData()
+            }
+            .refreshable {
+                store.reloadData()
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     monthStepper

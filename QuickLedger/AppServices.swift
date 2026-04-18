@@ -14,17 +14,28 @@ enum ShortcutDraftStore {
     static let dateKey = "shortcut_draft_date"
     static let sourceKey = "shortcut_draft_source"
 
+    // 使用 App Group 共享数据
+    private static var sharedDefaults: UserDefaults {
+        // 如果配置了 App Group，使用共享的 UserDefaults
+        if let shared = UserDefaults(suiteName: "group.com.quickledger.app") {
+            return shared
+        }
+        // 否则回退到标准 UserDefaults（开发阶段）
+        return UserDefaults.standard
+    }
+
     static func save(amount: Double, note: String?) {
-        let defaults = UserDefaults.standard
+        let defaults = sharedDefaults
         defaults.set(amount, forKey: amountKey)
         defaults.set(note, forKey: noteKey)
         defaults.set(RecordType.expense.rawValue, forKey: typeKey)
         defaults.set(Date(), forKey: dateKey)
         defaults.set("shortcut", forKey: sourceKey)
+        defaults.synchronize()
     }
 
     static func readAndClear() -> DraftPayload? {
-        let defaults = UserDefaults.standard
+        let defaults = sharedDefaults
         guard defaults.object(forKey: amountKey) != nil else {
             return nil
         }
@@ -40,6 +51,7 @@ enum ShortcutDraftStore {
         defaults.removeObject(forKey: typeKey)
         defaults.removeObject(forKey: dateKey)
         defaults.removeObject(forKey: sourceKey)
+        defaults.synchronize()
 
         return DraftPayload(
             amount: amount,
